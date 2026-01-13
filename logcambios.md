@@ -22,3 +22,8 @@
 - Añadido el botón "Sugerir equipos" para asignación automática según puntuación y restricciones de entidad.
 - Incluida animación rápida al repartir alumnos en los equipos sugeridos.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.6
+- Ajustado el texto de las tarjetas arrastrables para mostrar solo nombre y entidad.
+- Homogeneizada la distribución sugerida de alumnos por equipo manteniendo la restricción de entidad.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
