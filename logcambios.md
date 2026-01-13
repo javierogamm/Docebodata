@@ -38,3 +38,7 @@
 - Botones, inputs, tarjetas de gráficos y paneles ahora incluyen sombras, bordes redondeados y estados interactivos.
 - Renovado el modal de puntuaciones/equipos con fondos difuminados, columnas de equipos estilizadas y chips de rol actualizados.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.9
+- Añadidos los perfiles Archivo y Económico en la distribución de equipos, con etiquetas de color propias.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
