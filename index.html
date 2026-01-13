@@ -3,50 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <title>Portal de Dashboards – Formación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-alt: #eef2f8;
+    --primary: #1f6feb;
+    --primary-dark: #174ea6;
+    --accent: #14b8a6;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --radius: 18px;
+    --shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+    --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
   body {
-    margin:0; padding:0;
+    margin:0;
+    padding:0;
     height:100vh;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    background:linear-gradient(135deg,#004c6d 0%,#0090a0 100%);
-    font-family: Arial, sans-serif;
-    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(circle at top, #ffffff 0%, #f3f6fb 40%, #eaf0f8 100%);
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color:var(--text);
     text-align:center;
   }
+
   h1 {
-    font-size:2.2em;
-    margin-bottom:30px;
-    letter-spacing:1px;
+    font-size:2.4em;
+    margin-bottom:28px;
+    letter-spacing:-0.5px;
   }
+
   .botones {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
-    gap:30px;
+    gap:24px;
   }
+
   .btn {
-    background:#fff;
-    color:#004c6d;
-    padding:20px 40px;
-    font-size:1.3em;
-    font-weight:bold;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    transition: all 0.3s ease;
-    box-shadow:0 6px 14px rgba(0,0,0,0.25);
-  }
-  .btn:hover {
-    transform:scale(1.07);
-    background:#00b4c2;
+    background:linear-gradient(135deg, var(--primary), #3a8dff);
     color:#fff;
+    padding:20px 42px;
+    font-size:1.15em;
+    font-weight:600;
+    border:none;
+    border-radius:var(--radius);
+    cursor:pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow:var(--shadow-soft);
   }
+
+  .btn small {
+    display:block;
+    font-weight:500;
+    color:rgba(255,255,255,0.8);
+    margin-top:6px;
+  }
+
+  .btn:hover {
+    transform:translateY(-4px);
+    box-shadow:var(--shadow);
+  }
+
+  .btn:active {
+    transform:translateY(-1px);
+  }
+
   footer {
     position:absolute;
-    bottom:15px;
+    bottom:18px;
     font-size:0.9em;
-    opacity:0.8;
+    color:var(--muted);
   }
 </style>
 </head>

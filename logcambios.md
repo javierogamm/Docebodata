@@ -32,3 +32,9 @@
 - Añadida la selección de perfil por alumno (Jurídico, Informático, Administrativo) en las tarjetas de equipos con resaltado sutil.
 - La sugerencia automática de equipos ahora intenta repartir los perfiles de forma homogénea sin romper la restricción de entidad.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.8
+- Remodelación estética completa con tipografía moderna, paleta coherente y tarjetas suaves en el portal y dashboards.
+- Botones, inputs, tarjetas de gráficos y paneles ahora incluyen sombras, bordes redondeados y estados interactivos.
+- Renovado el modal de puntuaciones/equipos con fondos difuminados, columnas de equipos estilizadas y chips de rol actualizados.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
