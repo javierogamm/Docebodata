@@ -160,7 +160,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.5";
+const APP_VERSION = "1.0.6";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -515,6 +515,7 @@ function calcularPuntuaciones(filtrados){
     const total = entregables * 1 + tests * 2;
     return {
       usuario,
+      nombre: userIndex[usuario]?.nombre || "",
       display: userIndex[usuario]?.display || usuario,
       entidad: userIndex[usuario]?.entidad || "",
       entregables,
@@ -534,8 +535,13 @@ function construirAsignacionSugerida(alumnos, teamNames) {
   });
 
   const teamStats = new Map();
-  teamNames.forEach(team => {
+  const totalAlumnos = alumnos.length;
+  const baseSize = Math.floor(totalAlumnos / teamNames.length);
+  const extra = totalAlumnos % teamNames.length;
+  const teamCaps = new Map();
+  teamNames.forEach((team, index) => {
     teamStats.set(team, { score: 0, miembros: 0, entidades: new Set() });
+    teamCaps.set(team, baseSize + (index < extra ? 1 : 0));
   });
 
   const assignments = new Map();
@@ -545,16 +551,22 @@ function construirAsignacionSugerida(alumnos, teamNames) {
     const allowRepeat = !alumno.entidadKey || entidadPuedeRepetir(alumno.entidadKey);
     const candidates = teamNames.filter(team => {
       const stats = teamStats.get(team);
-      return allowRepeat || !stats.entidades.has(alumno.entidadKey);
+      const cap = teamCaps.get(team);
+      const hasSpace = stats.miembros < cap;
+      return hasSpace && (allowRepeat || !stats.entidades.has(alumno.entidadKey));
     });
-    const posibles = candidates.length ? candidates : teamNames;
+    const posibles = candidates.length ? candidates : teamNames.filter(team => {
+      const stats = teamStats.get(team);
+      return stats.miembros < teamCaps.get(team);
+    });
+    const fallback = posibles.length ? posibles : teamNames;
     if (preferredIndex !== null) {
       for (let offset = 0; offset < teamNames.length; offset += 1) {
         const team = teamNames[(preferredIndex + offset) % teamNames.length];
-        if (posibles.includes(team)) return team;
+        if (fallback.includes(team)) return team;
       }
     }
-    return posibles.reduce((best, team) => {
+    return fallback.reduce((best, team) => {
       const stats = teamStats.get(team);
       const bestStats = teamStats.get(best);
       if (stats.score !== bestStats.score) {
@@ -564,10 +576,10 @@ function construirAsignacionSugerida(alumnos, teamNames) {
         return stats.miembros < bestStats.miembros ? team : best;
       }
       return team;
-    }, posibles[0]);
+    }, fallback[0]);
   };
 
-  const ordenar = [...alumnos].sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
+  const ordenar = [...alumnos].sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre));
   const seedCount = Math.min(teamNames.length, ordenar.length);
 
   const asignar = (alumno, team) => {
@@ -623,7 +635,7 @@ function animarAutoAsignacion(teamBoard, assignments) {
 function inicializarEquipos(resultados) {
   const alumnos = resultados.map(r => ({
     id: r.usuario,
-    label: r.display,
+    nombre: r.nombre || r.display,
     entidad: r.entidad,
     score: r.total
   }));
@@ -709,7 +721,8 @@ function crearTarjetaAlumno(alumno) {
   card.className = "team-member";
   card.draggable = true;
   card.dataset.student = alumno.id;
-  card.textContent = alumno.label;
+  const nombre = alumno.nombre || alumno.id;
+  card.textContent = alumno.entidad ? `${nombre} — ${alumno.entidad}` : nombre;
   return card;
 }
 
