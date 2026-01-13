@@ -397,6 +397,22 @@
       display: inline-block;
     }
 
+    .role-tag.role-archivo {
+      color: #5b3c9d;
+      background: #f0e9ff;
+      border-radius: 999px;
+      padding: 2px 8px;
+      display: inline-block;
+    }
+
+    .role-tag.role-economico {
+      color: #1c7f4f;
+      background: #e3f7ed;
+      border-radius: 999px;
+      padding: 2px 8px;
+      display: inline-block;
+    }
+
     .role-select {
       margin-top: 6px;
       width: 100%;
@@ -425,6 +441,16 @@
     .team-member.role-admin {
       border-color: #f3e0b2;
       background: #fff9ec;
+    }
+
+    .team-member.role-archivo {
+      border-color: #d7c8f5;
+      background: #f8f4ff;
+    }
+
+    .team-member.role-economico {
+      border-color: #bfe8d3;
+      background: #f2fbf6;
     }
 
     .team-dropzone.auto-assign {
@@ -539,7 +565,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.8";
+const APP_VERSION = "1.0.9";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -557,7 +583,9 @@ const ROLE_OPTIONS = [
   { value: "", label: "Sin perfil" },
   { value: "legal", label: "Perfil Jurídico", className: "role-legal" },
   { value: "tech", label: "Perfil Informático", className: "role-tech" },
-  { value: "admin", label: "Perfil Administrativo", className: "role-admin" }
+  { value: "admin", label: "Perfil Administrativo", className: "role-admin" },
+  { value: "archivo", label: "Perfil Archivo", className: "role-archivo" },
+  { value: "economico", label: "Perfil Económico", className: "role-economico" }
 ];
 const ROLE_LABELS = ROLE_OPTIONS.reduce((acc, item) => {
   acc[item.value] = item.label;
@@ -1149,7 +1177,7 @@ function crearTarjetaAlumno(alumno) {
   card.appendChild(select);
 
   const aplicarRol = (role) => {
-    card.classList.remove("role-legal", "role-tech", "role-admin");
+    card.classList.remove("role-legal", "role-tech", "role-admin", "role-archivo", "role-economico");
     roleTag.className = "role-tag";
     roleTag.textContent = ROLE_LABELS[role] || "Sin perfil";
     if (role && ROLE_CLASSES[role]) {
