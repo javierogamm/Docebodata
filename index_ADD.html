@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Formación (Promos ADD – Filtros cruzados + Agrupaciones Bloques)</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#fafafa; }
+    .btn { cursor:pointer; border:1px solid #ddd; background:#f7f7f7; padding:6px 10px; border-radius:8px; }
+    #filtros { margin: 20px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .buscador { position: relative; display:inline-flex; align-items:center; gap:6px;
+      border:1px solid #ddd; padding:6px 10px; border-radius:8px; background:#fff; }
+    .buscador input { border:none; outline:none; min-width:260px; }
+    .sugerencias {
+      position:absolute; top:100%; left:0; right:0; z-index:10; background:#fff;
+      border:1px solid #ddd; border-radius:8px; margin-top:4px; max-height:240px; overflow:auto; display:none;
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    .sug-item { padding:8px 10px; cursor:pointer; }
+    .sug-item:hover, .sug-item.active { background:#f3f6f8; }
+    .grafico { margin-top: 30px; }
+    h1,h2,h3 { color:#004c6d; }
+  </style>
+</head>
+<body>
+
+  <h1>📊 Dashboard Formación (Promociones ADD)</h1>
+
+  <input type="file" id="input-excel" accept=".csv,.xlsx,.xls" />
+  <div id="filtros" style="display:none;">
+    <div class="buscador" title="Filtra por NIF o nombre (contiene)">
+      <span>🔎</span>
+      <input id="buscaUsuario" type="text" placeholder="Buscar usuario (NIF o nombre)..." autocomplete="off" />
+      <button id="clearUsuario" class="btn" title="Limpiar">✖</button>
+      <div id="sugerencias" class="sugerencias"></div>
+    </div>
+    <button class="btn" onclick="resetFiltros()">Quitar filtros</button>
+  </div>
+
+  <div class="grafico">
+    <h2>% Completado por Promoción</h2>
+    <div id="graficoPromos"></div>
+  </div>
+
+  <div class="grafico">
+    <h2>% de Finalización por Usuario</h2>
+    <div id="graficoUsuarios"></div>
+  </div>
+
+  <div class="grafico">
+    <h2>🧩 Actividades entregables</h2>
+    <div id="graficoEntregables"></div>
+  </div>
+
+  <div class="grafico">
+    <h2>📚 Bloques de Contenidos</h2>
+    <div id="graficoBloques"></div>
+  </div>
+  
+  <div class="grafico"><h3>Bloque 1 – Conociendo Analiza</h3><div id="graficoB1"></div></div>
+  <div class="grafico"><h3>Bloque 2 – Representación básica</h3><div id="graficoB2"></div></div>
+  <div class="grafico"><h3>Bloque 3 – Edición de expresiones</h3><div id="graficoB3"></div></div>
+  <div class="grafico"><h3>Bloque 4 – Analítica avanzada</h3><div id="graficoB4"></div></div>
+  <div class="grafico"><h3>Bloque 5 – EVF</h3><div id="graficoB5"></div></div>
+
+<script>
+/* =========================
+   CONFIGURACIÓN DE BLOQUES
+   ========================= */
+const MAPA_BLOQUES_RESTO = {
+  "Cómo funcionan las Búsquedas Avanzadas": "Bloque 1 Conociendo analiza",
+  "Qué es Analiza": "Bloque 1 Conociendo analiza",
+  "Cómo se usan los informes de analítica": "Bloque 1 Conociendo analiza",
+  "Analítica avanzada: Funciones de cadena": "Bloque 4 Analítica avanzada",
+  "Qué tipologías de gráficos de análisis y visualización de datos existen en Analiza": "Bloque 2 Representación básica",
+  "Ponte a prueba!": "Borrar",
+  "Cómo se gestionan las hojas en Analiza": "Bloque 2 Representación básica",
+  "Geoanalítica": "Bloque 4 Analítica avanzada",
+  "Analítica de datos personalizados": "Bloque 3 Edición de expresiones",
+  "Graba tu pantalla configurando los siguientes ejercicios:": "Borrar",
+  "Cómo usar colores personalizados": "Bloque 3 Edición de expresiones",
+  "Cómo se configuran las propiedades de los gráficos": "Bloque 2 Representación básica",
+  "Cómo se crean y usan los marcadores": "Bloque 2 Representación básica",
+  "Análisis de conjunto": "Bloque 3 Edición de expresiones",
+  "Configuración de expresiones en analiza": "Bloque 3 Edición de expresiones",
+  "Operaciones IF y Wildmatch": "Bloque 3 Edición de expresiones",
+  "Analítica avanzada: Funciones de agregación": "Bloque 4 Analítica avanzada",
+  "Uso de variables personalizadas en analiza": "Bloque 4 Analítica avanzada",
+  "Cálculos y operaciones con fechas": "Bloque 3 Edición de expresiones",
+  "Cálculos con medidas y funciones de agregación": "Bloque 4 Analítica avanzada",
+  "Cómo se dispone la información en Analiza": "Bloque 2 Representación básica",
+  "Solicitud de Evaluación Final_Certificación ADD": "Bloque 5 EVF",
+  "Encuesta certificación Analiza": "Bloque 5 EVF"
+};
+
+/* =========================
+   DASHBOARD PRINCIPAL
+   ========================= */
+let datos = [];
+let usuarioSeleccionadoClick = null;
+let promoSeleccionadaClick = null;
+let actividadSeleccionadaClick = null;
+
+const colores = {
+  azul: "#00718f",
+  turquesa: "#00a5b3",
+  grisClaro: "#cccccc"
+};
+
+const normaliza = s => (s || "")
+  .toString().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\s+/g, " ").trim();
+
+const inputExcel = document.getElementById("input-excel");
+const inputUsuario = document.getElementById("buscaUsuario");
+const contSugs = document.getElementById("sugerencias");
+const btnClearUsuario = document.getElementById("clearUsuario");
+
+let userIndex = {}, userList = [];
+let usuarioFiltroTexto = "";
+
+inputExcel.addEventListener("change", handleFile);
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  const ext = name.split('.').pop();
+
+  function postLoad() {
+    construirIndiceUsuarios();
+    document.getElementById("filtros").style.display = "flex";
+    actualizarGraficos();
+  }
+
+  function normalizeKeys(row) {
+    const out = {};
+    for (const [k, v] of Object.entries(row || {})) {
+      const nk = (k || "").replace(/^\uFEFF/, "").trim();
+      out[nk] = (typeof v === "string") ? v.trim() : v;
+    }
+    return out;
+  }
+
+  if (ext === "csv") {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const text = ev.target.result;
+      const parsed = Papa.parse(text, { header:true, skipEmptyLines:true });
+      datos = (parsed.data || []).map(normalizeKeys);
+      marcarCompletadosPromo0();
+      postLoad();
+    };
+    reader.readAsText(file, "utf-8");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type:"array" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(sheet);
+    datos = raw.map(normalizeKeys);
+    marcarCompletadosPromo0();
+    postLoad();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ✅ Marca completados todos los de promoción ADD00 o ADD0
+function marcarCompletadosPromo0() {
+  datos = datos.map(d => {
+    const promo = d["Promoción"] ? d["Promoción"].toString().trim().toUpperCase() : "";
+    if (/ADD0{1,2}\b/.test(promo)) {
+      d["Estado del material de formación"] = "Completado (forzado)";
+    }
+    return d;
+  });
+}
+
+function construirIndiceUsuarios() {
+  userIndex = {}; userList = [];
+  const ids = [...new Set(datos.map(d => d["Nombre de usuario"]).filter(Boolean))];
+  ids.forEach(id => {
+    const filas = datos.filter(d => d["Nombre de usuario"] === id);
+    const nombre = (filas.map(r => r["Nombre completo"]).find(v => v && v.trim())) || "";
+    const display = nombre ? `${id} — ${nombre}` : id;
+    userIndex[id] = {
+      id, nombre, display,
+      normId: normaliza(id),
+      normNombre: normaliza(nombre),
+      normDisplay: normaliza(display)
+    };
+  });
+  userList = Object.keys(userIndex).sort((a,b)=>userIndex[a].normId.localeCompare(userIndex[b].normId));
+}
+
+function generarSugerencias(q) {
+  const qn = normaliza(q);
+  if (!qn) { contSugs.style.display="none"; contSugs.innerHTML=""; return; }
+  const matches = [];
+  for (const id of userList) {
+    const u = userIndex[id];
+    if (u.normId.includes(qn) || u.normNombre.includes(qn) || u.normDisplay.includes(qn)) {
+      matches.push(u);
+      if (matches.length>=8) break;
+    }
+  }
+  if (!matches.length) { contSugs.style.display="none"; contSugs.innerHTML=""; return; }
+  contSugs.innerHTML = matches.map((u,idx)=>
+    `<div class="sug-item" data-id="${u.id}" data-idx="${idx}">${u.display}</div>`).join("");
+  contSugs.style.display="block";
+  [...contSugs.querySelectorAll(".sug-item")].forEach(el=>{
+    el.addEventListener("click",()=>{ seleccionarUsuario(el.getAttribute("data-id"),true); });
+  });
+}
+
+inputUsuario.addEventListener("input", ()=>{
+  usuarioFiltroTexto = inputUsuario.value;
+  usuarioSeleccionadoClick = null;
+  generarSugerencias(usuarioFiltroTexto);
+  actualizarGraficos();
+});
+btnClearUsuario.addEventListener("click", ()=>{
+  inputUsuario.value=""; usuarioFiltroTexto="";
+  usuarioSeleccionadoClick=null; contSugs.style.display="none";
+  actualizarGraficos();
+});
+
+function seleccionarUsuario(id, sync=false){
+  if (!id||!userIndex[id]) return;
+  usuarioSeleccionadoClick = (usuarioSeleccionadoClick === id) ? null : id; // toggle
+  if (sync){ inputUsuario.value=userIndex[id].display; contSugs.style.display="none"; }
+  promoSeleccionadaClick = null;
+  actividadSeleccionadaClick = null;
+  actualizarGraficos();
+}
+
+function extraePromoCodigo(promoRaw){
+  if (!promoRaw) return null;
+  const m = promoRaw.toString().trim().match(/ADD(\d{1,2})/i);
+  if (!m) return null;
+  return { code:`ADD${m[1].padStart(2,'0')}`, num:parseInt(m[1],10) };
+}
+
+function usuariosCoincidentesPorTexto(){
+  const q = normaliza(usuarioFiltroTexto);
+  if (!q) return null;
+  const set = new Set();
+  for (const id of userList){
+    const u=userIndex[id];
+    if (u.normId.includes(q)||u.normNombre.includes(q)||u.normDisplay.includes(q)) set.add(id);
+  }
+  return set;
+}
+
+function actualizarGraficos(){
+  const setUsuariosTexto = usuariosCoincidentesPorTexto();
+
+  // 🔹 Filtro global
+  const filtrados = datos.filter(d=>{
+    if (usuarioSeleccionadoClick && d["Nombre de usuario"] !== usuarioSeleccionadoClick) return false;
+    if (!usuarioSeleccionadoClick && setUsuariosTexto && !setUsuariosTexto.has(d["Nombre de usuario"])) return false;
+    const p = extraePromoCodigo(d["Promoción"]);
+    if (!p) return false;
+    if (promoSeleccionadaClick && p.code !== promoSeleccionadaClick) return false;
+    if (actividadSeleccionadaClick) {
+      const titulo = d["Título del material de formación"];
+      if (titulo !== actividadSeleccionadaClick) return false;
+    }
+    return true;
+  });
+
+  /* === PROMOCIONES === */
+  const promoAgg = {};
+  filtrados.forEach(d=>{
+    const p=extraePromoCodigo(d["Promoción"]); if(!p) return;
+    const promo=p.code;
+    if(!promoAgg[promo]) promoAgg[promo]={comp:0,total:0};
+    if(d["Estado del material de formación"]){
+      promoAgg[promo].total++;
+      if(d["Estado del material de formación"].toLowerCase().includes("complet")) promoAgg[promo].comp++;
+    }
+  });
+  const todasPromos=Object.keys(promoAgg).sort();
+  const xP=todasPromos;
+  const yP=xP.map(p=>{const a=promoAgg[p];return a.total>0?(a.comp/a.total)*100:0;});
+  Plotly.newPlot("graficoPromos",[{
+    x:xP,y:yP,type:"bar",marker:{color:colores.turquesa},
+    text:yP.map(v=>v.toFixed(1)+"%"),textposition:"inside"
+  }],{title:"% Completado por Promoción",yaxis:{range:[0,100]}});
+  document.getElementById("graficoPromos").on('plotly_click',(ev)=>{
+    const clicked=ev.points[0].x;
+    promoSeleccionadaClick=(promoSeleccionadaClick===clicked)?null:clicked;
+    usuarioSeleccionadoClick=null;
+    actividadSeleccionadaClick=null;
+    actualizarGraficos();
+  });
+
+  /* === USUARIOS === */
+  const usuarios={};
+  filtrados.forEach(d=>{
+    const u=d["Nombre de usuario"]; if(!u) return;
+    if(!usuarios[u]) usuarios[u]={total:0,comp:0};
+    if(d["Estado del material de formación"]){
+      usuarios[u].total++;
+      if(d["Estado del material de formación"].toLowerCase().includes("complet")) usuarios[u].comp++;
+    }
+  });
+  const xU=Object.keys(usuarios);
+  const yU=xU.map(u=>usuarios[u].total>0?(usuarios[u].comp/usuarios[u].total)*100:0);
+  Plotly.newPlot("graficoUsuarios",[{
+    x:xU.map(u=>userIndex[u]?.display||u),y:yU,type:"bar",marker:{color:colores.azul},
+    text:yU.map(v=>v.toFixed(1)+"%"),textposition:"inside"
+  }],{title:"% Finalización por Usuario",yaxis:{range:[0,100]},xaxis:{automargin:true}});
+  document.getElementById("graficoUsuarios").on('plotly_click',(ev)=>{
+    const idx=ev.points[0].pointIndex;
+    const userId=xU[idx];
+    seleccionarUsuario(userId,true);
+  });
+
+  /* === ACTIVIDADES === */
+  const entregables={}, bloques={}, materialesBloque={};
+  filtrados.forEach(d=>{
+    const titulo=d["Título del material de formación"]; if(!titulo) return;
+    const u=d["Nombre de usuario"];
+    const esEntregable=/entregable|tarea/i.test(titulo);
+    if(esEntregable){
+      if(!entregables[titulo]) entregables[titulo]={tot:new Set(),comp:new Set()};
+      entregables[titulo].tot.add(u);
+      if((d["Estado del material de formación"]||"").toLowerCase().includes("complet")) entregables[titulo].comp.add(u);
+    } else {
+      const bloque=MAPA_BLOQUES_RESTO[titulo]||"Otros";
+      if(bloque==="Borrar") return;
+      if(!bloques[bloque]) bloques[bloque]={tot:new Set(),comp:new Set()};
+      bloques[bloque].tot.add(u);
+      if((d["Estado del material de formación"]||"").toLowerCase().includes("complet")) bloques[bloque].comp.add(u);
+
+      // Agrupar materiales dentro de cada bloque
+      if(!materialesBloque[bloque]) materialesBloque[bloque]={};
+      if(!materialesBloque[bloque][titulo]) materialesBloque[bloque][titulo]={tot:new Set(),comp:new Set()};
+      materialesBloque[bloque][titulo].tot.add(u);
+      if((d["Estado del material de formación"]||"").toLowerCase().includes("complet"))
+        materialesBloque[bloque][titulo].comp.add(u);
+    }
+  });
+
+  /* === FUNCIÓN AUXILIAR DE GRAFICADO === */
+  function graficar(containerId, dataObj, titulo, orient="v"){
+    let entries=Object.keys(dataObj).map(k=>{
+      const s=dataObj[k];
+      const pct=(s.comp.size/s.tot.size)*100;
+      return {titulo:k,pct};
+    }).filter(e=>!isNaN(e.pct));
+
+    entries.sort((a,b)=>a.titulo.localeCompare(b.titulo));
+
+    const x=entries.map(e=>e.titulo);
+    const y=entries.map(e=>e.pct);
+
+    Plotly.newPlot(containerId,[{
+      x:orient==="v"?x:y,
+      y:orient==="v"?y:x,
+      type:"bar",
+      orientation:orient==="h"?"h":"v",
+      marker:{color:colores.turquesa},
+      text:y.map(p=>p.toFixed(1)+"%"),
+      textposition:"auto"
+    }],{
+      title:titulo,
+      yaxis:{range:[0,100]},
+      xaxis:{automargin:true},
+      margin:{l:orient==="h"?220:80,t:40,b:50}
+    });
+
+    document.getElementById(containerId).on('plotly_click',(ev)=>{
+      const clickedAct=ev.points[0].x;
+      actividadSeleccionadaClick=(actividadSeleccionadaClick===clickedAct)?null:clickedAct;
+      promoSeleccionadaClick=null;
+      usuarioSeleccionadoClick=null;
+      actualizarGraficos();
+    });
+  }
+
+  /* === GRAFICAR === */
+  graficar("graficoEntregables",entregables,"Actividades Entregables");
+  graficar("graficoBloques",bloques,"Bloques de Contenidos");
+
+  /* === 5 gráficos verticales (uno por bloque) === */
+["Bloque 1 Conociendo analiza",
+ "Bloque 2 Representación básica",
+ "Bloque 3 Edición de expresiones",
+ "Bloque 4 Analítica avanzada",
+ "Bloque 5 EVF"].forEach((bloque,i)=>{
+   if(materialesBloque[bloque])
+     graficar(`graficoB${i+1}`,materialesBloque[bloque],bloque,"v");
+});
+}
+
+
+function resetFiltros(){
+  usuarioSeleccionadoClick=null;
+  promoSeleccionadaClick=null;
+  actividadSeleccionadaClick=null;
+  inputUsuario.value="";
+  usuarioFiltroTexto="";
+  contSugs.style.display="none";
+  actualizarGraficos();
+}
+</script>
+
+</body>
+</html>

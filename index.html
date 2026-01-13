@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Portal de Dashboards – Formación</title>
+<style>
+  body {
+    margin:0; padding:0;
+    height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#004c6d 0%,#0090a0 100%);
+    font-family: Arial, sans-serif;
+    color:#fff;
+    text-align:center;
+  }
+  h1 {
+    font-size:2.2em;
+    margin-bottom:30px;
+    letter-spacing:1px;
+  }
+  .botones {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:30px;
+  }
+  .btn {
+    background:#fff;
+    color:#004c6d;
+    padding:20px 40px;
+    font-size:1.3em;
+    font-weight:bold;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    transition: all 0.3s ease;
+    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+  }
+  .btn:hover {
+    transform:scale(1.07);
+    background:#00b4c2;
+    color:#fff;
+  }
+  footer {
+    position:absolute;
+    bottom:15px;
+    font-size:0.9em;
+    opacity:0.8;
+  }
+</style>
+</head>
+<body>
+
+  <h1>📚 Portal de Dashboards de Formación</h1>
+
+  <div class="botones">
+    <button class="btn" onclick="window.location.href='index_AGG.html'">
+      🏛️ Dashboard AGG<br><small>Administración General de Gestiona</small>
+    </button>
+
+    <button class="btn" onclick="window.location.href='index_ADD.html'">
+      📊 Dashboard ADD<br><small>Analítica de Datos</small>
+    </button>
+  </div>
+
+  <footer>© 2025 Plataforma de Formación – Gestiona CODE</footer>
+
+</body>
+</html>
