@@ -23,6 +23,26 @@
     .grafico { margin-top: 20px; }
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
     .grid > div { border: 1px solid #ddd; padding: 8px; border-radius: 8px; }
+    .footer-actions { margin: 30px 0 10px; display:flex; justify-content:center; }
+    .btn-primary { background:#00718f; color:#fff; border:none; padding:10px 18px; font-weight:600; }
+    .btn-primary:hover { background:#005f75; }
+    .app-version { text-align:center; color:#6b6b6b; font-size:0.85rem; margin-bottom: 20px; }
+    .modal-backdrop {
+      position: fixed; inset:0; background: rgba(0,0,0,0.45);
+      display:none; align-items:center; justify-content:center; z-index:2000;
+    }
+    .modal-backdrop.active { display:flex; }
+    .modal {
+      background:#fff; width:min(960px, 92vw); max-height:80vh; overflow:auto;
+      border-radius:12px; padding:20px 24px; box-shadow:0 14px 30px rgba(0,0,0,0.25);
+    }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .modal-header h2 { margin:0; }
+    .modal-close { background:transparent; border:none; font-size:1.4rem; cursor:pointer; }
+    .scores-table { width:100%; border-collapse:collapse; margin-top:16px; }
+    .scores-table th, .scores-table td { padding:10px 12px; border-bottom:1px solid #e5e5e5; text-align:left; }
+    .scores-table th { background:#f3f6f8; position:sticky; top:0; z-index:1; }
+    .scores-empty { padding:20px 0; color:#666; text-align:center; }
     @media (max-width: 960px){
       .grid { grid-template-columns: 1fr; }
       .buscador input { min-width:160px; }
@@ -79,6 +99,21 @@
     </div>
   </div>
 
+  <div class="footer-actions">
+    <button id="btnPuntuaciones" class="btn btn-primary">📌 Ver puntuaciones</button>
+  </div>
+  <div class="app-version" id="appVersion"></div>
+
+  <div id="modalPuntuaciones" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tituloPuntuaciones">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="tituloPuntuaciones">Puntuaciones de alumnos filtrados</h2>
+        <button class="modal-close" id="cerrarPuntuaciones" aria-label="Cerrar">✖</button>
+      </div>
+      <div id="contenidoPuntuaciones"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="blocks.js"></script>
   <script>
@@ -86,6 +121,8 @@
     let usuarioSeleccionadoClick = null;   // selección por clic en gráfico
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
+    let ultimoFiltrado = [];
+    const APP_VERSION = "1.0.1";
 
     // Índice de usuarios para sugerencias: {id: {id, nombre, tutor, display, normId, normNombre, normDisplay}}
     let userIndex = {};
@@ -183,6 +220,12 @@
     const inputUsuario = document.getElementById("buscaUsuario");
     const btnClearUsuario = document.getElementById("clearUsuario");
     const contSugs = document.getElementById("sugerencias");
+    const btnPuntuaciones = document.getElementById("btnPuntuaciones");
+    const modalPuntuaciones = document.getElementById("modalPuntuaciones");
+    const cerrarPuntuaciones = document.getElementById("cerrarPuntuaciones");
+    const contenidoPuntuaciones = document.getElementById("contenidoPuntuaciones");
+
+    document.getElementById("appVersion").textContent = `Versión ${APP_VERSION}`;
 
     inputExcel.addEventListener("change", handleFile);
 
@@ -438,6 +481,7 @@
         if (promoSeleccionadaClick && promo !== promoSeleccionadaClick) return false;
         return true;
       });
+      ultimoFiltrado = filtrados;
 
       // BLOQUES
       const blockIds = {
@@ -636,6 +680,90 @@
 
 
     }
+
+    function calcularPuntuaciones(filtrados) {
+      const puntuaciones = {};
+      filtrados.forEach(d => {
+        const usuario = d["Nombre de usuario"];
+        const titulo = (d["Título del material de formación"] || "").toString();
+        const estado = (d["Estado del material de formación"] || "").toLowerCase();
+        if (!usuario || !titulo || !estado.includes("complet")) return;
+
+        const esEntregable = /entregable/i.test(titulo);
+        const esTest = /test/i.test(titulo);
+
+        if (!puntuaciones[usuario]) {
+          puntuaciones[usuario] = { entregables: new Set(), tests: new Set() };
+        }
+        if (esEntregable) {
+          puntuaciones[usuario].entregables.add(titulo);
+        }
+        if (esTest) {
+          puntuaciones[usuario].tests.add(titulo);
+        }
+      });
+
+      return Object.keys(puntuaciones).map(usuario => {
+        const datosUsuario = puntuaciones[usuario];
+        const entregables = datosUsuario.entregables.size;
+        const tests = datosUsuario.tests.size;
+        const total = entregables * 1 + tests * 2;
+        const meta = userIndex[usuario] || { display: usuario };
+        return {
+          usuario,
+          display: meta.display,
+          entregables,
+          tests,
+          total
+        };
+      }).sort((a, b) => b.total - a.total || a.display.localeCompare(b.display));
+    }
+
+    function renderizarPuntuaciones() {
+      const resultados = calcularPuntuaciones(ultimoFiltrado);
+      if (!resultados.length) {
+        contenidoPuntuaciones.innerHTML = `<div class="scores-empty">No hay alumnos con entregables o tests completados en el filtro actual.</div>`;
+        return;
+      }
+      const rows = resultados.map(r => `
+        <tr>
+          <td>${r.display}</td>
+          <td>${r.entregables}</td>
+          <td>${r.tests}</td>
+          <td><strong>${r.total}</strong></td>
+        </tr>
+      `).join("");
+      contenidoPuntuaciones.innerHTML = `
+        <table class="scores-table">
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Entregables (1 p.)</th>
+              <th>Tests (2 p.)</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    btnPuntuaciones.addEventListener("click", () => {
+      renderizarPuntuaciones();
+      modalPuntuaciones.classList.add("active");
+    });
+
+    cerrarPuntuaciones.addEventListener("click", () => {
+      modalPuntuaciones.classList.remove("active");
+    });
+
+    modalPuntuaciones.addEventListener("click", (event) => {
+      if (event.target === modalPuntuaciones) {
+        modalPuntuaciones.classList.remove("active");
+      }
+    });
  
     function resetFiltros() {
       usuarioSeleccionadoClick = null;
