@@ -59,6 +59,17 @@
     .team-member:active { cursor:grabbing; }
     .team-member.dragging { opacity:0.5; }
     .team-member.auto-assign { animation: autoDrop 0.3s ease; }
+    .team-member.open { cursor:default; }
+    .member-name { font-weight:600; color:#2b2b2b; }
+    .role-tag { margin-top:4px; font-size:0.78rem; color:#5f6c76; }
+    .role-tag.role-legal { color:#4f5c7a; background:#eef2ff; border-radius:6px; padding:2px 6px; display:inline-block; }
+    .role-tag.role-tech { color:#2f6a6a; background:#e7f7f7; border-radius:6px; padding:2px 6px; display:inline-block; }
+    .role-tag.role-admin { color:#6a5a2f; background:#fbf5e6; border-radius:6px; padding:2px 6px; display:inline-block; }
+    .role-select { margin-top:6px; width:100%; padding:4px 6px; border-radius:6px; border:1px solid #d5dbe0; font-size:0.82rem; display:none; }
+    .team-member.open .role-select { display:block; }
+    .team-member.role-legal { border-color:#c9d4ff; background:#f7f9ff; }
+    .team-member.role-tech { border-color:#c3ecec; background:#f4fcfc; }
+    .team-member.role-admin { border-color:#f0e1b6; background:#fffbf2; }
     .team-dropzone.auto-assign { background:#e6f7fa; transition: background 0.3s ease; }
     @keyframes autoDrop {
       from { transform: translateY(-8px); opacity:0.6; }
@@ -144,13 +155,14 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.6";
+    const APP_VERSION = "1.0.7";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
     };
     let teamCount = 3;
     let teamAssignments = new Map();
+    let userRoles = new Map();
 
     // Índice de usuarios para sugerencias: {id: {id, nombre, tutor, display, normId, normNombre, normDisplay}}
     let userIndex = {};
@@ -166,6 +178,20 @@
       grisClaro: "#cccccc",
       grisOscuro: "#666666"
     };
+    const ROLE_OPTIONS = [
+      { value: "", label: "Sin perfil" },
+      { value: "legal", label: "Perfil Jurídico", className: "role-legal" },
+      { value: "tech", label: "Perfil Informático", className: "role-tech" },
+      { value: "admin", label: "Perfil Administrativo", className: "role-admin" }
+    ];
+    const ROLE_LABELS = ROLE_OPTIONS.reduce((acc, item) => {
+      acc[item.value] = item.label;
+      return acc;
+    }, {});
+    const ROLE_CLASSES = ROLE_OPTIONS.reduce((acc, item) => {
+      if (item.className) acc[item.value] = item.className;
+      return acc;
+    }, {});
 
     // === Exclusiones de "Título del material de formación" ===
     const EXCLUSIONES_CRUDAS = [
@@ -773,7 +799,7 @@
       const extra = totalAlumnos % teamNames.length;
       const teamCaps = new Map();
       teamNames.forEach((team, index) => {
-        teamStats.set(team, { score: 0, miembros: 0, entidades: new Set() });
+        teamStats.set(team, { score: 0, miembros: 0, entidades: new Set(), roles: new Map() });
         teamCaps.set(team, baseSize + (index < extra ? 1 : 0));
       });
 
@@ -802,6 +828,13 @@
         return fallback.reduce((best, team) => {
           const stats = teamStats.get(team);
           const bestStats = teamStats.get(best);
+          if (alumno.role) {
+            const roleCount = stats.roles.get(alumno.role) || 0;
+            const bestRoleCount = bestStats.roles.get(alumno.role) || 0;
+            if (roleCount !== bestRoleCount) {
+              return roleCount < bestRoleCount ? team : best;
+            }
+          }
           if (stats.score !== bestStats.score) {
             return stats.score < bestStats.score ? team : best;
           }
@@ -821,6 +854,9 @@
         stats.score += alumno.score;
         stats.miembros += 1;
         if (alumno.entidadKey) stats.entidades.add(alumno.entidadKey);
+        if (alumno.role) {
+          stats.roles.set(alumno.role, (stats.roles.get(alumno.role) || 0) + 1);
+        }
       };
 
       for (let i = 0; i < seedCount; i += 1) {
@@ -870,7 +906,8 @@
         id: r.usuario,
         nombre: r.nombre || r.display,
         entidad: r.entidad,
-        score: r.total
+        score: r.total,
+        role: userRoles.get(r.usuario) || ""
       }));
       const teamSelect = document.getElementById("teamCount");
       const suggestButton = document.getElementById("suggestTeams");
@@ -955,7 +992,62 @@
       card.draggable = true;
       card.dataset.student = alumno.id;
       const nombre = alumno.nombre || alumno.id;
-      card.textContent = alumno.entidad ? `${nombre} — ${alumno.entidad}` : nombre;
+
+      const nameLine = document.createElement("div");
+      nameLine.className = "member-name";
+      nameLine.textContent = alumno.entidad ? `${nombre} — ${alumno.entidad}` : nombre;
+      card.appendChild(nameLine);
+
+      const roleTag = document.createElement("div");
+      roleTag.className = "role-tag";
+      card.appendChild(roleTag);
+
+      const select = document.createElement("select");
+      select.className = "role-select";
+      ROLE_OPTIONS.forEach(option => {
+        const opt = document.createElement("option");
+        opt.value = option.value;
+        opt.textContent = option.label;
+        select.appendChild(opt);
+      });
+      select.value = alumno.role || "";
+      card.appendChild(select);
+
+      const aplicarRol = (role) => {
+        card.classList.remove("role-legal", "role-tech", "role-admin");
+        roleTag.className = "role-tag";
+        roleTag.textContent = ROLE_LABELS[role] || "Sin perfil";
+        if (role && ROLE_CLASSES[role]) {
+          card.classList.add(ROLE_CLASSES[role]);
+          roleTag.classList.add(ROLE_CLASSES[role]);
+        }
+      };
+
+      aplicarRol(alumno.role || "");
+
+      card.addEventListener("click", (event) => {
+        if (event.target === select) return;
+        card.classList.toggle("open");
+        if (card.classList.contains("open")) {
+          select.focus();
+        }
+      });
+
+      select.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+
+      select.addEventListener("change", (event) => {
+        const role = event.target.value;
+        if (role) {
+          userRoles.set(alumno.id, role);
+        } else {
+          userRoles.delete(alumno.id);
+        }
+        alumno.role = role;
+        aplicarRol(role);
+      });
+
       return card;
     }
 
