@@ -12,3 +12,8 @@
 
 ## Versión 1.0.3
 - Ajustada la lectura del campo Entidad para aceptar encabezados "Entidad" o "ENTIDAD" en los dashboards ADD y AGG.
+
+## Versión 1.0.4
+- Añadida la sección de distribución de equipos en el modal de puntuaciones con selector de 3 o 4 equipos.
+- Incorporado drag & drop para asignar alumnos a equipos (Rojo, Marrón, Verde y Ladrillosco).
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
