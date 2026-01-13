@@ -9,3 +9,6 @@
 - Añadida la entidad del alumno en el modal de puntuaciones al cargar CSV.
 - Reubicado el botón de puntuaciones en la parte superior derecha.
 - Ampliado el tamaño del modal de puntuaciones.
+
+## Versión 1.0.3
+- Ajustada la lectura del campo Entidad para aceptar encabezados "Entidad" o "ENTIDAD" en los dashboards ADD y AGG.
