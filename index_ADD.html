@@ -47,6 +47,7 @@
     .teams-header h3 { margin:0; color:#004c6d; }
     .teams-controls { display:flex; align-items:center; gap:8px; }
     .teams-controls select { padding:6px 10px; border-radius:8px; border:1px solid #d0d7de; }
+    .btn-suggest { padding:8px 12px; }
     .teams-help { margin:8px 0 0; color:#666; font-size:0.92rem; }
     .teams-board { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px; }
     .team-column { border:1px solid #d5dbe0; border-radius:10px; background:#f9fbfc; padding:10px; min-height:220px; display:flex; flex-direction:column; }
@@ -56,6 +57,12 @@
     .team-member { padding:8px 10px; background:#fff; border:1px solid #e1e6eb; border-radius:8px; cursor:grab; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
     .team-member:active { cursor:grabbing; }
     .team-member.dragging { opacity:0.5; }
+    .team-member.auto-assign { animation: autoDrop 0.3s ease; }
+    .team-dropzone.auto-assign { background:#e6f7fa; transition: background 0.3s ease; }
+    @keyframes autoDrop {
+      from { transform: translateY(-8px); opacity:0.6; }
+      to { transform: translateY(0); opacity:1; }
+    }
   </style>
 </head>
 <body>
@@ -153,7 +160,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.4";
+const APP_VERSION = "1.0.5";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -517,12 +524,111 @@ function calcularPuntuaciones(filtrados){
   }).sort((a,b)=> b.total - a.total || a.display.localeCompare(b.display));
 }
 
+function construirAsignacionSugerida(alumnos, teamNames) {
+  const entityCounts = new Map();
+  alumnos.forEach(alumno => {
+    const key = normaliza(alumno.entidad || "");
+    alumno.entidadKey = key;
+    if (!key) return;
+    entityCounts.set(key, (entityCounts.get(key) || 0) + 1);
+  });
+
+  const teamStats = new Map();
+  teamNames.forEach(team => {
+    teamStats.set(team, { score: 0, miembros: 0, entidades: new Set() });
+  });
+
+  const assignments = new Map();
+  const entidadPuedeRepetir = (key) => (entityCounts.get(key) || 0) > teamNames.length;
+
+  const elegirEquipo = (alumno, preferredIndex = null) => {
+    const allowRepeat = !alumno.entidadKey || entidadPuedeRepetir(alumno.entidadKey);
+    const candidates = teamNames.filter(team => {
+      const stats = teamStats.get(team);
+      return allowRepeat || !stats.entidades.has(alumno.entidadKey);
+    });
+    const posibles = candidates.length ? candidates : teamNames;
+    if (preferredIndex !== null) {
+      for (let offset = 0; offset < teamNames.length; offset += 1) {
+        const team = teamNames[(preferredIndex + offset) % teamNames.length];
+        if (posibles.includes(team)) return team;
+      }
+    }
+    return posibles.reduce((best, team) => {
+      const stats = teamStats.get(team);
+      const bestStats = teamStats.get(best);
+      if (stats.score !== bestStats.score) {
+        return stats.score < bestStats.score ? team : best;
+      }
+      if (stats.miembros !== bestStats.miembros) {
+        return stats.miembros < bestStats.miembros ? team : best;
+      }
+      return team;
+    }, posibles[0]);
+  };
+
+  const ordenar = [...alumnos].sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
+  const seedCount = Math.min(teamNames.length, ordenar.length);
+
+  const asignar = (alumno, team) => {
+    assignments.set(alumno.id, team);
+    const stats = teamStats.get(team);
+    stats.score += alumno.score;
+    stats.miembros += 1;
+    if (alumno.entidadKey) stats.entidades.add(alumno.entidadKey);
+  };
+
+  for (let i = 0; i < seedCount; i += 1) {
+    const alumno = ordenar[i];
+    const team = elegirEquipo(alumno, i);
+    asignar(alumno, team);
+  }
+
+  for (let i = seedCount; i < ordenar.length; i += 1) {
+    const alumno = ordenar[i];
+    const team = elegirEquipo(alumno);
+    asignar(alumno, team);
+  }
+
+  return assignments;
+}
+
+function animarAutoAsignacion(teamBoard, assignments) {
+  const cards = [...teamBoard.querySelectorAll(".team-member")];
+  const cardsById = new Map(cards.map(card => [card.dataset.student, card]));
+  const zones = new Map(
+    [...teamBoard.querySelectorAll(".team-dropzone")].map(zone => [zone.dataset.team, zone])
+  );
+  let delay = 0;
+  assignments.forEach((team, id) => {
+    const card = cardsById.get(id);
+    const zone = zones.get(team);
+    if (!card || !zone) return;
+    if (card.closest(".team-dropzone") !== zone) {
+      zone.appendChild(card);
+    }
+    const localDelay = delay;
+    setTimeout(() => {
+      card.classList.add("auto-assign");
+      zone.classList.add("auto-assign");
+      setTimeout(() => {
+        card.classList.remove("auto-assign");
+        zone.classList.remove("auto-assign");
+      }, 300);
+    }, localDelay);
+    delay += 60;
+  });
+}
+
 function inicializarEquipos(resultados) {
   const alumnos = resultados.map(r => ({
     id: r.usuario,
-    label: r.display
+    label: r.display,
+    entidad: r.entidad,
+    score: r.total
   }));
   const teamSelect = document.getElementById("teamCount");
+  const suggestButton = document.getElementById("suggestTeams");
   const teamBoard = document.getElementById("teamsBoard");
   if (!teamSelect || !teamBoard) return;
 
@@ -531,6 +637,15 @@ function inicializarEquipos(resultados) {
     teamCount = Number(event.target.value) || 3;
     renderizarTableroEquipos(teamBoard, alumnos);
   });
+
+  if (suggestButton) {
+    suggestButton.addEventListener("click", () => {
+      const teamNames = TEAM_CONFIG[teamCount] || TEAM_CONFIG[3];
+      teamAssignments = construirAsignacionSugerida(alumnos, teamNames);
+      renderizarTableroEquipos(teamBoard, alumnos);
+      animarAutoAsignacion(teamBoard, teamAssignments);
+    });
+  }
 
   renderizarTableroEquipos(teamBoard, alumnos);
 }
@@ -691,9 +806,10 @@ function renderizarPuntuaciones(){
             <option value="3">3 equipos</option>
             <option value="4">4 equipos</option>
           </select>
+          <button id="suggestTeams" class="btn btn-primary btn-suggest" type="button">✨ Sugerir equipos</button>
         </div>
       </div>
-      <p class="teams-help">Arrastra a cada alumno hacia el equipo deseado.</p>
+      <p class="teams-help">Arrastra a cada alumno hacia el equipo deseado o usa la sugerencia automática para repartirlos.</p>
       <div class="teams-board" id="teamsBoard"></div>
     </div>
   `;

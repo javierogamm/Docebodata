@@ -17,3 +17,8 @@
 - Añadida la sección de distribución de equipos en el modal de puntuaciones con selector de 3 o 4 equipos.
 - Incorporado drag & drop para asignar alumnos a equipos (Rojo, Marrón, Verde y Ladrillosco).
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.5
+- Añadido el botón "Sugerir equipos" para asignación automática según puntuación y restricciones de entidad.
+- Incluida animación rápida al repartir alumnos en los equipos sugeridos.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
