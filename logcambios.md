@@ -27,3 +27,8 @@
 - Ajustado el texto de las tarjetas arrastrables para mostrar solo nombre y entidad.
 - Homogeneizada la distribución sugerida de alumnos por equipo manteniendo la restricción de entidad.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.7
+- Añadida la selección de perfil por alumno (Jurídico, Informático, Administrativo) en las tarjetas de equipos con resaltado sutil.
+- La sugerencia automática de equipos ahora intenta repartir los perfiles de forma homogénea sin romper la restricción de entidad.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
