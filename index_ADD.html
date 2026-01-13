@@ -139,7 +139,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 
 const colores = {
   azul: "#00718f",
@@ -151,6 +151,14 @@ const normaliza = s => (s || "")
   .toString().toLowerCase()
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/\s+/g, " ").trim();
+
+function obtenerCampo(filas, keys) {
+  for (const key of keys) {
+    const value = filas.map(r => r[key]).find(v => v && v.trim());
+    if (value) return value;
+  }
+  return "";
+}
 
 const inputExcel = document.getElementById("input-excel");
 const inputUsuario = document.getElementById("buscaUsuario");
@@ -236,7 +244,7 @@ function construirIndiceUsuarios() {
   ids.forEach(id => {
     const filas = datos.filter(d => d["Nombre de usuario"] === id);
     const nombre = (filas.map(r => r["Nombre completo"]).find(v => v && v.trim())) || "";
-    const entidad = (filas.map(r => r["ENTIDAD"]).find(v => v && v.trim())) || "";
+    const entidad = obtenerCampo(filas, ["Entidad", "ENTIDAD"]);
     const display = nombre ? `${id} — ${nombre}` : id;
     userIndex[id] = {
       id, nombre, entidad, display,
