@@ -42,3 +42,8 @@
 ## Versión 1.0.9
 - Añadidos los perfiles Archivo y Económico en la distribución de equipos, con etiquetas de color propias.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.10
+- Ajustadas las etiquetas de % de Finalización por Usuario en AGG para mostrar solo el nombre y el tutor entre paréntesis.
+- Convertidos los gráficos de % de Finalización por Material (AGG) a barras horizontales con contenedores desplazables.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.

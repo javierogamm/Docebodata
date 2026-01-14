@@ -138,6 +138,14 @@
       background: var(--surface-alt);
       box-shadow: var(--shadow-soft);
     }
+    .scrollable-chart {
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    .scrollable-chart > div {
+      width: 100%;
+    }
 
     .top-actions { display:flex; justify-content:flex-end; margin: 10px 0 20px; }
     .btn-primary {
@@ -291,13 +299,13 @@
 
   <!-- 5 gráficos de materiales por bloque -->
   <div class="grafico">
-    <h2>% de Finalización por Material (Agrupado por Bloques)</h2>
+      <h2>% de Finalización por Material (Agrupado por Bloques)</h2>
     <div class="grid">
-      <div><h3>BLOQUE 1: GENERAL</h3><div id="graficoMat_B1"></div></div>
-      <div><h3>BLOQUE 2: GDA</h3><div id="graficoMat_B2"></div></div>
-      <div><h3>BLOQUE 3: REGLADA</h3><div id="graficoMat_B3"></div></div>
-      <div><h3>BLOQUE 4: ECONÓMICA</h3><div id="graficoMat_B4"></div></div>
-      <div style="grid-column: 1 / -1;"><h3>BLOQUE 5: ANALÍTICA</h3><div id="graficoMat_B5"></div></div>
+      <div><h3>BLOQUE 1: GENERAL</h3><div class="scrollable-chart"><div id="graficoMat_B1"></div></div></div>
+      <div><h3>BLOQUE 2: GDA</h3><div class="scrollable-chart"><div id="graficoMat_B2"></div></div></div>
+      <div><h3>BLOQUE 3: REGLADA</h3><div class="scrollable-chart"><div id="graficoMat_B3"></div></div></div>
+      <div><h3>BLOQUE 4: ECONÓMICA</h3><div class="scrollable-chart"><div id="graficoMat_B4"></div></div></div>
+      <div style="grid-column: 1 / -1;"><h3>BLOQUE 5: ANALÍTICA</h3><div class="scrollable-chart"><div id="graficoMat_B5"></div></div></div>
     </div>
   </div>
 
@@ -321,7 +329,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.9";
+    const APP_VERSION = "1.0.10";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -778,12 +786,19 @@
         titles.forEach(t => {
           const s = matStats[t]; if (!s || s.tot.size===0) return;
           const pct = (s.comp.size/s.tot.size)*100;
-          x.push(t); y.push(pct); texts.push(pct.toFixed(1)+"%");
+          y.push(t); x.push(pct); texts.push(pct.toFixed(1)+"%");
         });
 
+        const plotHeight = Math.max(220, y.length * 28 + 80);
         Plotly.newPlot(containerId, [{
-          x, y, type:"bar", name:b, marker:{color: colores.turquesa}, text:texts, textposition:"inside"
-        }], { title:"", yaxis:{range:[0,100]}, xaxis:{automargin:true} });
+          x, y, type:"bar", orientation:"h", name:b,
+          marker:{color: colores.turquesa}, text:texts, textposition:"inside"
+        }], {
+          title:"",
+          height: plotHeight,
+          xaxis:{range:[0,100], automargin:true},
+          yaxis:{automargin:true}
+        });
       });
 
       // USUARIOS
@@ -797,11 +812,12 @@
       });
 
       const usuariosOrdenados = Object.keys(usuarios);
-          const nombresUsuarios = usuariosOrdenados.map(u => {
-            const meta = userIndex[u] || { display: u, tutor: "" };
-            const tutorTxt = meta.tutor ? ` (${meta.tutor})` : "";
-            return meta.display + tutorTxt;   // Ej.: "12345678X — Juan Pérez (Elena Serrano)"
-          });
+      const nombresUsuarios = usuariosOrdenados.map(u => {
+        const meta = userIndex[u] || { nombre: u, tutor: "" };
+        const nombreAlumno = meta.nombre || u;
+        const tutorTxt = meta.tutor ? ` (${meta.tutor})` : "";
+        return `${nombreAlumno}${tutorTxt}`;
+      });
 
       const completadoUsu = usuariosOrdenados.map(u => {
         const s = usuarios[u]; return s.total>0 ? (s.completados/s.total)*100 : 0;
