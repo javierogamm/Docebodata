@@ -837,7 +837,8 @@
         });
 
         const entregableLabels = entregablesOrdenados.filter(t => entregableStats[t] && entregableStats[t].tot.size > 0);
-        if (!entregableLabels.length) {
+        const entregableLabelsOrdenados = entregableLabels.slice().reverse();
+        if (!entregableLabelsOrdenados.length) {
           entregablesContainer.innerHTML = `<div class="scores-empty">No hay entregables disponibles con los filtros actuales.</div>`;
         } else {
           entregablesContainer.innerHTML = "";
@@ -846,7 +847,7 @@
           const textEnt = [];
           const hoverEnt = [];
 
-          entregableLabels.forEach(t => {
+          entregableLabelsOrdenados.forEach(t => {
             const s = entregableStats[t];
             const pct = s.tot.size ? (s.comp.size / s.tot.size) * 100 : 0;
             xEnt.push(pct);
