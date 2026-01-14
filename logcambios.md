@@ -57,3 +57,8 @@
 - Incluidas las tareas del Taller online 8 y las actividades de los talleres 01 y 02 en el bloque Entregables.
 - Reordenados los entregables por número de taller, dejando las actividades de talleres 01 y 02 al final.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.13
+- Ajustado el orden de los entregables para priorizar número de taller online y número de tarea, dejando Actividad 01 y Actividad 02 al final.
+- Incluidas las actividades 01/02 en la clasificación de entregables cuando aparecen en los datos.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.

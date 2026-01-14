@@ -565,7 +565,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.12";
+const APP_VERSION = "1.0.13";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -764,6 +764,31 @@ function usuariosCoincidentesPorTexto(){
   return set;
 }
 
+const normalizaEntregable = s => (s || "")
+  .toString()
+  .toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
+const ENTREGABLES_ACTIVIDADES_SET = new Set([
+  "Actividad 01",
+  "Actividad 02",
+  "Actividades TALLER 01. Búsquedas Avanzadas. Conceptos y opciones disponibles Instrucciones",
+  "Actividades TALLER 02. Gestiona Analiza. Conceptos y primeros pasos de configuración"
+].map(normalizaEntregable));
+const obtenerNumeroTaller = (titulo = "") => {
+  const match = titulo.match(/taller(?: online)?\s*0*(\d+)/i);
+  return match ? parseInt(match[1], 10) : Number.POSITIVE_INFINITY;
+};
+const obtenerNumeroTarea = (titulo = "") => {
+  const match = titulo.match(/tarea\s*0*(\d+)/i);
+  return match ? parseInt(match[1], 10) : Number.POSITIVE_INFINITY;
+};
+const obtenerNumeroEntregable = (titulo = "") => {
+  const match = titulo.match(/entregable.*?(\d+)/i);
+  return match ? parseInt(match[1], 10) : Number.POSITIVE_INFINITY;
+};
+
 function actualizarGraficos(){
   const setUsuariosTexto = usuariosCoincidentesPorTexto();
 
@@ -835,7 +860,7 @@ function actualizarGraficos(){
   filtrados.forEach(d=>{
     const titulo=d["Título del material de formación"]; if(!titulo) return;
     const u=d["Nombre de usuario"];
-    const esEntregable=/entregable|tarea/i.test(titulo);
+    const esEntregable=/entregable|tarea/i.test(titulo) || ENTREGABLES_ACTIVIDADES_SET.has(normalizaEntregable(titulo));
     if(esEntregable){
       if(!entregables[titulo]) entregables[titulo]={tot:new Set(),comp:new Set()};
       entregables[titulo].tot.add(u);
@@ -864,7 +889,27 @@ function actualizarGraficos(){
       return {titulo:k,pct};
     }).filter(e=>!isNaN(e.pct));
 
-    entries.sort((a,b)=>a.titulo.localeCompare(b.titulo));
+    if (containerId === "graficoEntregables") {
+      entries.sort((a, b) => {
+        const normA = normalizaEntregable(a.titulo);
+        const normB = normalizaEntregable(b.titulo);
+        const esActividadA = ENTREGABLES_ACTIVIDADES_SET.has(normA);
+        const esActividadB = ENTREGABLES_ACTIVIDADES_SET.has(normB);
+        if (esActividadA !== esActividadB) return esActividadA ? 1 : -1;
+        const numTallerA = obtenerNumeroTaller(a.titulo);
+        const numTallerB = obtenerNumeroTaller(b.titulo);
+        if (numTallerA !== numTallerB) return numTallerA - numTallerB;
+        const numTareaA = obtenerNumeroTarea(a.titulo);
+        const numTareaB = obtenerNumeroTarea(b.titulo);
+        if (numTareaA !== numTareaB) return numTareaA - numTareaB;
+        const numEntregableA = obtenerNumeroEntregable(a.titulo);
+        const numEntregableB = obtenerNumeroEntregable(b.titulo);
+        if (numEntregableA !== numEntregableB) return numEntregableA - numEntregableB;
+        return a.titulo.localeCompare(b.titulo, "es");
+      });
+    } else {
+      entries.sort((a,b)=>a.titulo.localeCompare(b.titulo));
+    }
 
     const x=entries.map(e=>e.titulo);
     const y=entries.map(e=>e.pct);
