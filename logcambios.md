@@ -52,3 +52,8 @@
 - Añadida una sección de entregables con su % de finalización ordenados por número de entregable debajo de % Completado por Bloque.
 - Restaurada la disposición vertical de los gráficos de % de Finalización por Material (Agrupado por Bloques).
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.12
+- Incluidas las tareas del Taller online 8 y las actividades de los talleres 01 y 02 en el bloque Entregables.
+- Reordenados los entregables por número de taller, dejando las actividades de talleres 01 y 02 al final.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
