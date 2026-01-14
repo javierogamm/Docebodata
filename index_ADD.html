@@ -565,7 +565,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.13";
+const APP_VERSION = "1.0.14";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -895,7 +895,7 @@ function actualizarGraficos(){
         const normB = normalizaEntregable(b.titulo);
         const esActividadA = ENTREGABLES_ACTIVIDADES_SET.has(normA);
         const esActividadB = ENTREGABLES_ACTIVIDADES_SET.has(normB);
-        if (esActividadA !== esActividadB) return esActividadA ? 1 : -1;
+        if (esActividadA !== esActividadB) return esActividadA ? -1 : 1;
         const numTallerA = obtenerNumeroTaller(a.titulo);
         const numTallerB = obtenerNumeroTaller(b.titulo);
         if (numTallerA !== numTallerB) return numTallerA - numTallerB;
