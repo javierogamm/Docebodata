@@ -47,3 +47,13 @@
 - Ajustadas las etiquetas de % de Finalización por Usuario en AGG para mostrar solo el nombre y el tutor entre paréntesis.
 - Convertidos los gráficos de % de Finalización por Material (AGG) a barras horizontales con contenedores desplazables.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.11
+- Añadida una sección de entregables con su % de finalización ordenados por número de entregable debajo de % Completado por Bloque.
+- Restaurada la disposición vertical de los gráficos de % de Finalización por Material (Agrupado por Bloques).
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.12
+- Incluidos como entregables adicionales las tareas del Taller online 8 y las actividades de los talleres de búsquedas avanzadas y Analiza.
+- Actualizada la lógica de puntuaciones para que estos entregables extra sumen 1 punto en el modal de puntuaciones.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
