@@ -67,3 +67,7 @@
 - Invertido el orden de los entregables para mostrar las actividades antes que los talleres online en la sección de entregables.
 - Convertidos los gráficos de materiales por bloque en AGG a barras verticales con etiquetas inclinadas para mejorar la lectura.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.15
+- Renombrados los entregables del gráfico de finalización según las correlaciones solicitadas y ordenados del 01 al 11.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.

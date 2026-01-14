@@ -334,7 +334,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.14";
+    const APP_VERSION = "1.0.15";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -422,6 +422,70 @@
       "Actividades TALLER 01. Búsquedas Avanzadas. Conceptos y opciones disponibles Instrucciones",
       "Actividades TALLER 02. Gestiona Analiza. Conceptos y primeros pasos de configuración"
     ];
+    const ENTREGABLES_LABELS = [
+      {
+        original: "Entregable taller online 1 - Tarea 1. Contextualización y configuración del catálogo",
+        label: "01. Taller 01 - Tarea 01 Contextualización catálogo"
+      },
+      {
+        original: "Entregable taller online 1 - Tarea 2. Contextualización y configuración del catálogo",
+        label: "02. Taller 01 - Tarea 02 Contextualización catálogo"
+      },
+      {
+        original: "Entregable taller online 2 - Tarea 1. Campos personalizados del tesauro",
+        label: "03. Taller 02 - Tarea 01 Campos tesauro y estados"
+      },
+      {
+        original: "Entregable taller online 3 - Tarea 1. Construcción de trámites inteligentes",
+        label: "04. Taller 03 - Tarea 01 Trámites inteligentes"
+      },
+      {
+        original: "Entregable taller online 4 - Tarea 1. Circuito de resolución singular",
+        label: "05. Taller 04 - Tarea 01 CR Singular"
+      },
+      {
+        original: "Entregable taller online 5 - Tarea 1. Circuito de resolución plural",
+        label: "06. Taller 05 - Tarea 01 CR Plural"
+      },
+      {
+        original: "Entregable taller online 6 - Tarea 1. Simplificación administrativa",
+        label: "07. Taller 06 - Tarea 01 Simplificación"
+      },
+      {
+        original: "Tarea 1. Taller online 8. Circuitos de resolución con gasto",
+        label: "08. Taller 08 - Tarea 01 CR con gasto"
+      },
+      {
+        original: "Entregable taller online 8 - Tarea 1. Circuitos de resolución con gasto",
+        label: "08. Taller 08 - Tarea 01 CR con gasto"
+      },
+      {
+        original: "Tarea 2. Taller online 8. Circuitos de resolución con gasto",
+        label: "09. Taller 08 - Tarea 02 CR con gasto"
+      },
+      {
+        original: "Entregable taller online 8 - Tarea 2. Circuitos de resolución con gasto",
+        label: "09. Taller 08 - Tarea 02 CR con gasto"
+      },
+      {
+        original: "Actividades TALLER 01. Búsquedas Avanzadas. Conceptos y opciones disponibles Instrucciones",
+        label: "10. Taller 09 - Tarea 01 Búsquedas Avanzadas"
+      },
+      {
+        original: "Actividades TALLER 02. Gestiona Analiza. Conceptos y primeros pasos de configuración",
+        label: "11. Taller 10 - Tarea 01 Analítica"
+      }
+    ];
+    const ENTREGABLES_LABEL_MAP = new Map(
+      ENTREGABLES_LABELS.map(({ original, label }) => [normaliza(original), label])
+    );
+    const obtenerEtiquetaEntregable = (titulo = "") =>
+      ENTREGABLES_LABEL_MAP.get(normaliza(titulo)) || titulo;
+    const obtenerOrdenEtiqueta = (titulo = "") => {
+      const etiqueta = obtenerEtiquetaEntregable(titulo);
+      const match = etiqueta.match(/^(\d{2})\./);
+      return match ? parseInt(match[1], 10) : Number.POSITIVE_INFINITY;
+    };
     const ENTREGABLES_EXTRA_SET = new Set(ENTREGABLES_EXTRA.map(normaliza));
     const ENTREGABLES_ACTIVIDADES_SET = new Set([
       "Actividad 01",
@@ -802,21 +866,12 @@
         const entregablesOrdenados = entregablesUnicos
           .slice()
           .sort((a, b) => {
-            const normA = normaliza(a);
-            const normB = normaliza(b);
-            const esActividadA = ENTREGABLES_ACTIVIDADES_SET.has(normA);
-            const esActividadB = ENTREGABLES_ACTIVIDADES_SET.has(normB);
-            if (esActividadA !== esActividadB) return esActividadA ? -1 : 1;
-            const numA = obtenerNumeroTaller(a);
-            const numB = obtenerNumeroTaller(b);
-            if (numA !== numB) return numA - numB;
-            const tareaNumA = obtenerNumeroTarea(a);
-            const tareaNumB = obtenerNumeroTarea(b);
-            if (tareaNumA !== tareaNumB) return tareaNumA - tareaNumB;
-            const entregableNumA = obtenerNumeroEntregable(a);
-            const entregableNumB = obtenerNumeroEntregable(b);
-            if (entregableNumA !== entregableNumB) return entregableNumA - entregableNumB;
-            return a.localeCompare(b, "es");
+            const ordenA = obtenerOrdenEtiqueta(a);
+            const ordenB = obtenerOrdenEtiqueta(b);
+            if (ordenA !== ordenB) return ordenA - ordenB;
+            const etiquetaA = obtenerEtiquetaEntregable(a);
+            const etiquetaB = obtenerEtiquetaEntregable(b);
+            return etiquetaA.localeCompare(etiquetaB, "es");
           });
         const entregableNormMap = new Map(
           entregablesOrdenados.map(titulo => [normaliza(titulo), titulo])
@@ -837,7 +892,7 @@
         });
 
         const entregableLabels = entregablesOrdenados.filter(t => entregableStats[t] && entregableStats[t].tot.size > 0);
-        const entregableLabelsOrdenados = entregableLabels.slice().reverse();
+        const entregableLabelsOrdenados = entregableLabels.slice();
         if (!entregableLabelsOrdenados.length) {
           entregablesContainer.innerHTML = `<div class="scores-empty">No hay entregables disponibles con los filtros actuales.</div>`;
         } else {
@@ -851,7 +906,7 @@
             const s = entregableStats[t];
             const pct = s.tot.size ? (s.comp.size / s.tot.size) * 100 : 0;
             xEnt.push(pct);
-            yEnt.push(t);
+            yEnt.push(obtenerEtiquetaEntregable(t));
             textEnt.push(`${pct.toFixed(1)}%`);
             hoverEnt.push(`Usuarios con estado: ${s.tot.size}<br>Completados: ${s.comp.size}`);
           });
