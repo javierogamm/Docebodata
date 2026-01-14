@@ -334,7 +334,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.13";
+    const APP_VERSION = "1.0.17";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -866,7 +866,7 @@
             title:"",
             height: plotHeight,
             xaxis:{range:[0,100], automargin:true},
-            yaxis:{automargin:true}
+            yaxis:{automargin:true, autorange:"reversed"}
           });
         }
       }
@@ -896,18 +896,20 @@
         titles.forEach(t => {
           const s = matStats[t]; if (!s || s.tot.size===0) return;
           const pct = (s.comp.size/s.tot.size)*100;
-          y.push(t); x.push(pct); texts.push(pct.toFixed(1)+"%");
+          x.push(t); y.push(pct); texts.push(pct.toFixed(1)+"%");
         });
 
-        const plotHeight = Math.max(220, y.length * 28 + 80);
+        const plotHeight = 260;
         Plotly.newPlot(containerId, [{
-          x, y, type:"bar", orientation:"h", name:b,
-          marker:{color: colores.turquesa}, text:texts, textposition:"inside"
+          x, y, type:"bar", name:b,
+          marker:{color: colores.turquesa}, text:texts, textposition:"auto"
         }], {
           title:"",
           height: plotHeight,
-          xaxis:{range:[0,100], automargin:true},
-          yaxis:{automargin:true}
+          yaxis:{range:[0,100], automargin:true},
+          xaxis:{automargin:true, tickangle:-30},
+          bargap: 0.15,
+          margin: { t: 10, b: 70, l: 40, r: 20 }
         });
       });
 

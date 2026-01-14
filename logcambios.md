@@ -62,3 +62,21 @@
 - Ajustado el orden de los entregables para priorizar número de taller online y número de tarea, dejando Actividad 01 y Actividad 02 al final.
 - Incluidas las actividades 01/02 en la clasificación de entregables cuando aparecen en los datos.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.14
+- Invertido el orden de los entregables para mostrar las actividades antes que los talleres online en la sección de entregables.
+- Convertidos los gráficos de materiales por bloque en AGG a barras verticales con etiquetas inclinadas para mejorar la lectura.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.15
+- Invertido el orden mostrado en el gráfico de entregables de AGG para reflejar el listado de arriba a abajo solicitado.
+- Ajustado el tamaño y los márgenes de los gráficos verticales de materiales por bloque en AGG para evitar el scroll y ensanchar las barras.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.16
+- Reordenados los entregables para dejar Actividad 01 y Actividad 02 al final del listado en AGG y ADD.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.17
+- Ajustado el eje del gráfico de entregables en AGG para que Actividad 01 y Actividad 02 queden visualmente al final.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
