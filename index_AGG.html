@@ -334,7 +334,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.17";
+    const APP_VERSION = "1.0.14";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -806,7 +806,7 @@
             const normB = normaliza(b);
             const esActividadA = ENTREGABLES_ACTIVIDADES_SET.has(normA);
             const esActividadB = ENTREGABLES_ACTIVIDADES_SET.has(normB);
-            if (esActividadA !== esActividadB) return esActividadA ? 1 : -1;
+            if (esActividadA !== esActividadB) return esActividadA ? -1 : 1;
             const numA = obtenerNumeroTaller(a);
             const numB = obtenerNumeroTaller(b);
             if (numA !== numB) return numA - numB;
@@ -837,7 +837,8 @@
         });
 
         const entregableLabels = entregablesOrdenados.filter(t => entregableStats[t] && entregableStats[t].tot.size > 0);
-        if (!entregableLabels.length) {
+        const entregableLabelsOrdenados = entregableLabels.slice().reverse();
+        if (!entregableLabelsOrdenados.length) {
           entregablesContainer.innerHTML = `<div class="scores-empty">No hay entregables disponibles con los filtros actuales.</div>`;
         } else {
           entregablesContainer.innerHTML = "";
@@ -846,7 +847,7 @@
           const textEnt = [];
           const hoverEnt = [];
 
-          entregableLabels.forEach(t => {
+          entregableLabelsOrdenados.forEach(t => {
             const s = entregableStats[t];
             const pct = s.tot.size ? (s.comp.size / s.tot.size) * 100 : 0;
             xEnt.push(pct);
@@ -899,7 +900,7 @@
           x.push(t); y.push(pct); texts.push(pct.toFixed(1)+"%");
         });
 
-        const plotHeight = 260;
+        const plotHeight = Math.max(260, x.length * 18 + 120);
         Plotly.newPlot(containerId, [{
           x, y, type:"bar", name:b,
           marker:{color: colores.turquesa}, text:texts, textposition:"auto"
@@ -907,9 +908,7 @@
           title:"",
           height: plotHeight,
           yaxis:{range:[0,100], automargin:true},
-          xaxis:{automargin:true, tickangle:-30},
-          bargap: 0.15,
-          margin: { t: 10, b: 70, l: 40, r: 20 }
+          xaxis:{automargin:true, tickangle:-30}
         });
       });
 
