@@ -1014,13 +1014,13 @@
         const estado = (d["Estado del material de formación"] || "").toLowerCase();
         if (!usuario || !titulo || !estado.includes("complet")) return;
 
-        const esEntregable = /entregable/i.test(titulo);
+        const esEntregableActual = esEntregable(titulo);
         const esTest = /test/i.test(titulo);
 
         if (!puntuaciones[usuario]) {
           puntuaciones[usuario] = { entregables: new Set(), tests: new Set() };
         }
-        if (esEntregable) {
+        if (esEntregableActual) {
           puntuaciones[usuario].entregables.add(titulo);
         }
         if (esTest) {
