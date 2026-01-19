@@ -144,6 +144,21 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow-soft);
     }
+    .plot-scroll {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .plot-scroll .plotly-graph-div {
+      min-width: 100%;
+    }
+    .plot-scroll::-webkit-scrollbar {
+      height: 8px;
+    }
+    .plot-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.35);
+      border-radius: 999px;
+    }
 
     .top-actions {
       display: flex;
@@ -491,29 +506,29 @@
 
   <div class="grafico">
     <h2>% Completado por Promoción</h2>
-    <div id="graficoPromos"></div>
+    <div class="plot-scroll"><div id="graficoPromos"></div></div>
   </div>
 
   <div class="grafico">
     <h2>% de Finalización por Usuario</h2>
-    <div id="graficoUsuarios"></div>
+    <div class="plot-scroll"><div id="graficoUsuarios"></div></div>
   </div>
 
   <div class="grafico">
     <h2>🧩 Actividades entregables</h2>
-    <div id="graficoEntregables"></div>
+    <div class="plot-scroll"><div id="graficoEntregables"></div></div>
   </div>
 
   <div class="grafico">
     <h2>📚 Bloques de Contenidos</h2>
-    <div id="graficoBloques"></div>
+    <div class="plot-scroll"><div id="graficoBloques"></div></div>
   </div>
   
-  <div class="grafico"><h3>Bloque 1 – Conociendo Analiza</h3><div id="graficoB1"></div></div>
-  <div class="grafico"><h3>Bloque 2 – Representación básica</h3><div id="graficoB2"></div></div>
-  <div class="grafico"><h3>Bloque 3 – Edición de expresiones</h3><div id="graficoB3"></div></div>
-  <div class="grafico"><h3>Bloque 4 – Analítica avanzada</h3><div id="graficoB4"></div></div>
-  <div class="grafico"><h3>Bloque 5 – EVF</h3><div id="graficoB5"></div></div>
+  <div class="grafico"><h3>Bloque 1 – Conociendo Analiza</h3><div class="plot-scroll"><div id="graficoB1"></div></div></div>
+  <div class="grafico"><h3>Bloque 2 – Representación básica</h3><div class="plot-scroll"><div id="graficoB2"></div></div></div>
+  <div class="grafico"><h3>Bloque 3 – Edición de expresiones</h3><div class="plot-scroll"><div id="graficoB3"></div></div></div>
+  <div class="grafico"><h3>Bloque 4 – Analítica avanzada</h3><div class="plot-scroll"><div id="graficoB4"></div></div></div>
+  <div class="grafico"><h3>Bloque 5 – EVF</h3><div class="plot-scroll"><div id="graficoB5"></div></div></div>
 
   <div class="app-version" id="appVersion"></div>
 
@@ -565,7 +580,7 @@ let usuarioSeleccionadoClick = null;
 let promoSeleccionadaClick = null;
 let actividadSeleccionadaClick = null;
 let ultimoFiltrado = [];
-const APP_VERSION = "1.0.17";
+const APP_VERSION = "1.0.18";
 const TEAM_CONFIG = {
   3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
   4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -579,6 +594,17 @@ const colores = {
   turquesa: "#00a5b3",
   grisClaro: "#cccccc"
 };
+const MIN_BAR_WIDTH = 36;
+const PLOT_SIDE_PADDING = 140;
+function ajustarAnchoColumnas(containerId, itemCount) {
+  const container = document.getElementById(containerId);
+  if (!container || !itemCount) return;
+  const wrapper = container.closest(".plot-scroll");
+  if (!wrapper) return;
+  const baseWidth = wrapper.clientWidth || container.clientWidth || 0;
+  const desiredWidth = Math.max(baseWidth, itemCount * MIN_BAR_WIDTH + PLOT_SIDE_PADDING);
+  container.style.minWidth = `${desiredWidth}px`;
+}
 const ROLE_OPTIONS = [
   { value: "", label: "Sin perfil" },
   { value: "legal", label: "Perfil Jurídico", className: "role-legal" },
@@ -889,6 +915,7 @@ function actualizarGraficos(){
     x:xP,y:yP,type:"bar",marker:{color:colores.turquesa},
     text:yP.map(v=>v.toFixed(1)+"%"),textposition:"inside"
   }],{title:"% Completado por Promoción",yaxis:{range:[0,100]}});
+  ajustarAnchoColumnas("graficoPromos", xP.length);
   document.getElementById("graficoPromos").on('plotly_click',(ev)=>{
     const clicked=ev.points[0].x;
     promoSeleccionadaClick=(promoSeleccionadaClick===clicked)?null:clicked;
@@ -913,6 +940,7 @@ function actualizarGraficos(){
     x:xU.map(u=>userIndex[u]?.display||u),y:yU,type:"bar",marker:{color:colores.azul},
     text:yU.map(v=>v.toFixed(1)+"%"),textposition:"inside"
   }],{title:"% Finalización por Usuario",yaxis:{range:[0,100]},xaxis:{automargin:true}});
+  ajustarAnchoColumnas("graficoUsuarios", xU.length);
   document.getElementById("graficoUsuarios").on('plotly_click',(ev)=>{
     const idx=ev.points[0].pointIndex;
     const userId=xU[idx];
@@ -982,6 +1010,9 @@ function actualizarGraficos(){
       xaxis:{automargin:true},
       margin:{l:orient==="h"?220:80,t:40,b:50}
     });
+    if (orient === "v") {
+      ajustarAnchoColumnas(containerId, x.length);
+    }
 
     document.getElementById(containerId).on('plotly_click',(ev)=>{
       const clickedAct=ev.points[0].x;
