@@ -76,3 +76,7 @@
 - Distribuidos los bloques de % de Finalización por Material en dos columnas, eliminando el scroll interno.
 - Ajustada la presentación para que todos los bloques mantengan la misma altura y aspecto que el bloque 5 Analítica.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.17
+- Reducida la altura y el grosor visual de las barras en % de Finalización por Material (Agrupado por Bloques) para evitar la deformación vertical.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
