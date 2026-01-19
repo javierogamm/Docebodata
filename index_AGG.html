@@ -130,21 +130,13 @@
       box-shadow: var(--shadow-soft);
     }
 
-    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
     .grid > div {
       border: 1px solid var(--border);
       padding: 12px;
       border-radius: var(--radius);
       background: var(--surface-alt);
       box-shadow: var(--shadow-soft);
-    }
-    .scrollable-chart {
-      max-height: 360px;
-      overflow-y: auto;
-      padding-right: 6px;
-    }
-    .scrollable-chart > div {
-      width: 100%;
     }
 
     .top-actions { display:flex; justify-content:flex-end; margin: 10px 0 20px; }
@@ -306,11 +298,11 @@
   <div class="grafico">
       <h2>% de Finalización por Material (Agrupado por Bloques)</h2>
     <div class="grid">
-      <div><h3>BLOQUE 1: GENERAL</h3><div class="scrollable-chart"><div id="graficoMat_B1"></div></div></div>
-      <div><h3>BLOQUE 2: GDA</h3><div class="scrollable-chart"><div id="graficoMat_B2"></div></div></div>
-      <div><h3>BLOQUE 3: REGLADA</h3><div class="scrollable-chart"><div id="graficoMat_B3"></div></div></div>
-      <div><h3>BLOQUE 4: ECONÓMICA</h3><div class="scrollable-chart"><div id="graficoMat_B4"></div></div></div>
-      <div><h3>BLOQUE 5: ANALÍTICA</h3><div class="scrollable-chart"><div id="graficoMat_B5"></div></div></div>
+      <div><h3>BLOQUE 1: GENERAL</h3><div id="graficoMat_B1"></div></div>
+      <div><h3>BLOQUE 2: GDA</h3><div id="graficoMat_B2"></div></div>
+      <div><h3>BLOQUE 3: REGLADA</h3><div id="graficoMat_B3"></div></div>
+      <div><h3>BLOQUE 4: ECONÓMICA</h3><div id="graficoMat_B4"></div></div>
+      <div><h3>BLOQUE 5: ANALÍTICA</h3><div id="graficoMat_B5"></div></div>
     </div>
   </div>
 
@@ -334,7 +326,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.15";
+    const APP_VERSION = "1.0.16";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
