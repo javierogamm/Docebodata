@@ -326,7 +326,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.16";
+    const APP_VERSION = "1.0.17";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -947,15 +947,16 @@
           x.push(t); y.push(pct); texts.push(pct.toFixed(1)+"%");
         });
 
-        const plotHeight = Math.max(260, x.length * 18 + 120);
+        const plotHeight = 220;
         Plotly.newPlot(containerId, [{
           x, y, type:"bar", name:b,
           marker:{color: colores.turquesa}, text:texts, textposition:"auto"
         }], {
           title:"",
           height: plotHeight,
+          bargap: 0.55,
           yaxis:{range:[0,100], automargin:true},
-          xaxis:{automargin:true, tickangle:-30}
+          xaxis:{automargin:true, tickangle:-45}
         });
       });
 
