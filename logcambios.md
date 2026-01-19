@@ -71,3 +71,8 @@
 ## Versión 1.0.15
 - Renombrados los entregables del gráfico de finalización según las correlaciones solicitadas y ordenados del 01 al 11.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.16
+- Distribuidos los bloques de % de Finalización por Material en dos columnas, eliminando el scroll interno.
+- Ajustada la presentación para que todos los bloques mantengan la misma altura y aspecto que el bloque 5 Analítica.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
