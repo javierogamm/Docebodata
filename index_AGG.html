@@ -129,6 +129,21 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow-soft);
     }
+    .plot-scroll {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .plot-scroll .plotly-graph-div {
+      min-width: 100%;
+    }
+    .plot-scroll::-webkit-scrollbar {
+      height: 8px;
+    }
+    .plot-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.35);
+      border-radius: 999px;
+    }
 
     .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
     .grid > div {
@@ -273,20 +288,20 @@
   <!-- Arriba: solo Promos -->
   <div class="grafico">
     <h2>% Completado por Promoción</h2>
-    <div id="graficoPromos"></div>
+    <div class="plot-scroll"><div id="graficoPromos"></div></div>
   </div>
 
   <!-- Debajo usuarios -->
   <div class="grafico">
     <h2>% de Finalización por Usuario</h2>
-    <div id="graficoUsuarios"></div>
+    <div class="plot-scroll"><div id="graficoUsuarios"></div></div>
   </div>
   
   
   <!-- % completado por bloque -->
   <div class="grafico">
     <h2>% Completado por Bloque</h2>
-    <div id="graficoBloques"></div>
+    <div class="plot-scroll"><div id="graficoBloques"></div></div>
   </div>
 
   <div class="grafico">
@@ -298,11 +313,11 @@
   <div class="grafico">
       <h2>% de Finalización por Material (Agrupado por Bloques)</h2>
     <div class="grid">
-      <div><h3>BLOQUE 1: GENERAL</h3><div id="graficoMat_B1"></div></div>
-      <div><h3>BLOQUE 2: GDA</h3><div id="graficoMat_B2"></div></div>
-      <div><h3>BLOQUE 3: REGLADA</h3><div id="graficoMat_B3"></div></div>
-      <div><h3>BLOQUE 4: ECONÓMICA</h3><div id="graficoMat_B4"></div></div>
-      <div><h3>BLOQUE 5: ANALÍTICA</h3><div id="graficoMat_B5"></div></div>
+      <div><h3>BLOQUE 1: GENERAL</h3><div class="plot-scroll"><div id="graficoMat_B1"></div></div></div>
+      <div><h3>BLOQUE 2: GDA</h3><div class="plot-scroll"><div id="graficoMat_B2"></div></div></div>
+      <div><h3>BLOQUE 3: REGLADA</h3><div class="plot-scroll"><div id="graficoMat_B3"></div></div></div>
+      <div><h3>BLOQUE 4: ECONÓMICA</h3><div class="plot-scroll"><div id="graficoMat_B4"></div></div></div>
+      <div><h3>BLOQUE 5: ANALÍTICA</h3><div class="plot-scroll"><div id="graficoMat_B5"></div></div></div>
     </div>
   </div>
 
@@ -326,7 +341,7 @@
     let promoSeleccionadaClick = null;
     let bloqueSeleccionadoClick = null;
     let ultimoFiltrado = [];
-    const APP_VERSION = "1.0.17";
+    const APP_VERSION = "1.0.18";
     const TEAM_CONFIG = {
       3: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde"],
       4: ["Equipo Rojo", "Equipo Marrón", "Equipo Verde", "Equipo Ladrillosco"]
@@ -349,6 +364,17 @@
       grisClaro: "#cccccc",
       grisOscuro: "#666666"
     };
+    const MIN_BAR_WIDTH = 36;
+    const PLOT_SIDE_PADDING = 140;
+    function ajustarAnchoColumnas(containerId, itemCount) {
+      const container = document.getElementById(containerId);
+      if (!container || !itemCount) return;
+      const wrapper = container.closest(".plot-scroll");
+      if (!wrapper) return;
+      const baseWidth = wrapper.clientWidth || container.clientWidth || 0;
+      const desiredWidth = Math.max(baseWidth, itemCount * MIN_BAR_WIDTH + PLOT_SIDE_PADDING);
+      container.style.minWidth = `${desiredWidth}px`;
+    }
     const ROLE_OPTIONS = [
       { value: "", label: "Sin perfil" },
       { value: "legal", label: "Perfil Jurídico", className: "role-legal" },
@@ -796,6 +822,7 @@
         text: pctPromos.map(v => v.toFixed(1) + "%"), textposition: "inside",
         hovertemplate: "%{x}<br>%{text}<br>%{customdata}<extra></extra>", customdata: hoverTextPromos
       }], { title: "% Completado por Promoción", yaxis: {range:[0,100]}, clickmode: "event+select" });
+      ajustarAnchoColumnas("graficoPromos", nombresPromos.length);
 
       // Filtrado central
       const filtrados = datos.filter(d => {
@@ -848,6 +875,7 @@
         text: yBloques.map(v => v.toFixed(1)+"%"), textposition:"inside",
         hovertemplate: "%{x}<br>%{text}<br>%{customdata}<extra></extra>", customdata: hoverBloques
       }], { title:"% Completado por Bloque", yaxis:{range:[0,100]}, clickmode:"event+select" });
+      ajustarAnchoColumnas("graficoBloques", xBloques.length);
 
       // ENTREGABLES
       const entregablesContainer = document.getElementById("graficoEntregables");
@@ -958,6 +986,7 @@
           yaxis:{range:[0,100], automargin:true},
           xaxis:{automargin:true, tickangle:-45}
         });
+        ajustarAnchoColumnas(containerId, x.length);
       });
 
       // USUARIOS
@@ -989,6 +1018,7 @@
         { x:nombresUsuarios, y:noCompletadoUsu, name:"No Completado", type:"bar", marker:{color: colores.grisClaro},
           text: noCompletadoUsu.map(p=>p.toFixed(1)+"%"), textposition:"inside" }
       ], { title:"% Finalización por Usuario", barmode:"stack", yaxis:{range:[0,100]}, xaxis:{automargin:true} });
+      ajustarAnchoColumnas("graficoUsuarios", nombresUsuarios.length);
 
       // Cross-filters
       document.getElementById("graficoPromos").on('plotly_click', (ev)=>{
@@ -1014,7 +1044,7 @@
   if (!cont) {
     const div = document.createElement("div");
     div.className = "grafico";
-    div.innerHTML = `<h2>% de Finalización en TESTS</h2><div id="graficoTests"></div>`;
+    div.innerHTML = `<h2>% de Finalización en TESTS</h2><div class="plot-scroll"><div id="graficoTests"></div></div>`;
     document.body.appendChild(div);
     cont = document.getElementById("graficoTests");
   }
@@ -1082,6 +1112,7 @@
           yaxis: { range: [0, 100] },
           xaxis: { automargin: true }
         });
+        ajustarAnchoColumnas("graficoTests", xTests.length);
       }
 
 

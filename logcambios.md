@@ -80,3 +80,8 @@
 ## Versión 1.0.17
 - Reducida la altura y el grosor visual de las barras en % de Finalización por Material (Agrupado por Bloques) para evitar la deformación vertical.
 - Actualizada la versión visible de la app en los dashboards ADD y AGG.
+
+## Versión 1.0.18
+- Ajustado el ancho mínimo de las columnas en gráficos con muchas categorías para mejorar la legibilidad.
+- Añadido scroll horizontal en contenedores de gráficos cuando el número de columnas lo requiere.
+- Actualizada la versión visible de la app en los dashboards ADD y AGG.
